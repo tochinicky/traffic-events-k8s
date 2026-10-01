@@ -14,6 +14,8 @@ pipeline {
   environment {
     DOTNET_CLI_TELEMETRY_OPTOUT = '1'
     DOTNET_NOLOGO = '1'
+    // Shares a small Docker VM with the kind cluster: one MSBuild node, no lingering worker processes.
+    MSBUILDDISABLENODEREUSE = '1'
     CLUSTER = 'traffic-events'
     KUBECONFIG = "${WORKSPACE}/.kubeconfig"
     // From inside the kind network, the node container's name replaces localhost.
@@ -36,7 +38,7 @@ pipeline {
 
     stage('Restore & Build') {
       steps {
-        sh 'dotnet build -c Release' // analyzers on, warnings are errors
+        sh 'dotnet build -c Release -m:1' // analyzers on, warnings are errors
       }
     }
 

@@ -12,6 +12,10 @@ INGEST_URL="${INGEST_URL:-http://localhost:30080}"
 QUERY_URL="${QUERY_URL:-http://localhost:30081}"
 RABBIT_UI_URL="${RABBIT_UI_URL:-http://localhost:15672}"
 
+# Always talk to this project's cluster, whatever the current kubectl context is (Docker Desktop
+# can switch it to its own built-in cluster). The kind kubeconfig names the context the same in Jenkins.
+kubectl() { command kubectl --context "kind-$CLUSTER" "$@"; }
+
 log() { printf '\033[1;34m==> %s\033[0m\n' "$*"; }
 
 # Image tag: the git commit, plus a timestamp if the tree is dirty (so a rebuild really rolls out).

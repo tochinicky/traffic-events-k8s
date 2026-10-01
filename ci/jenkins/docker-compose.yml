@@ -23,6 +23,7 @@ services:
     networks:
       - kind # same network as the kind node → https://traffic-events-control-plane:6443
     mem_limit: 2g
+    restart: unless-stopped
 
 networks:
   kind:
