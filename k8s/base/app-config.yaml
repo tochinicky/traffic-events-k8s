@@ -1,0 +1,18 @@
+# Non-secret settings shared by the .NET services, injected as environment variables.
+# ASP.NET Core maps `Section__Key` env vars onto configuration `Section:Key`.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  ASPNETCORE_ENVIRONMENT: Production
+  # Workstation GC: one heap and fewer threads. Server GC is tuned for throughput on big boxes;
+  # in a 256Mi container it mostly costs memory.
+  DOTNET_gcServer: "0"
+  RABBITMQ_HOST: rabbitmq
+  MONGO_HOST: mongodb
+  Mongo__Database: traffic
+  RabbitMq__Prefetch: "20"
+  RabbitMq__MaxRetries: "3"
+  RabbitMq__RetryDelay: "00:00:05"
+  Processor__LowSpeedThresholdKmh: "20"

@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Runs against a deployed cluster. Skipped unless SMOKE_INGEST_URL is set (see `make smoke`). -->
+</Project>

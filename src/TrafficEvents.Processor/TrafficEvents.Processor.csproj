@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <!-- A BackgroundService worker, hosted in a minimal web host only to serve /health and /metrics. -->
+  <ItemGroup>
+    <ProjectReference Include="..\TrafficEvents.Infrastructure\TrafficEvents.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

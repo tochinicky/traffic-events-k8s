@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <!-- Console app (Web SDK only so it can share the aspnet base image). -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TrafficEvents.Core\TrafficEvents.Core.csproj" />
+  </ItemGroup>
+</Project>

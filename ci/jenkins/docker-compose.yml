@@ -1,0 +1,32 @@
+# Local Jenkins for the CI demo:  make jenkins-up   →  http://localhost:8081
+# Memory: ~1.5 GB while building. Don't run it alongside `make load` or a separate `make test`.
+services:
+  jenkins:
+    build: .
+    container_name: traffic-events-jenkins
+    # root only so the controller can use the mounted Docker socket on Docker Desktop.
+    # Acceptable for a local demo; never for a shared Jenkins.
+    user: root
+    ports:
+      - "8081:8080"
+    environment:
+      JENKINS_ADMIN_PASSWORD: ${JENKINS_ADMIN_PASSWORD:-admin}
+      # Testcontainers' containers are siblings on the host Docker; reach their ports via the host.
+      TESTCONTAINERS_HOST_OVERRIDE: host.docker.internal
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock # build images, run Testcontainers, kind load
+      - ../..:/repo:ro # the job checks out file:///repo (commit first: Jenkins builds what's committed)
+      - ../../k8s/overlays/dev/secrets.env:/run/secrets/secrets.env:ro
+    networks:
+      - kind # same network as the kind node → https://traffic-events-control-plane:6443
+    mem_limit: 2g
+
+networks:
+  kind:
+    external: true # created by `kind create cluster`
+
+volumes:
+  jenkins_home:

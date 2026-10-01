@@ -1,0 +1,16 @@
+==> Current image: traffic-events/query-api:dev-1790843634 → building rollout-1790845478
+==> Rolling out query-api:rollout-1790845478 (maxSurge 1, maxUnavailable 0)
+deployment.apps/query-api image updated
+deployment "query-api" successfully rolled out
+  query-api now reports: {"service":"query-api","version":"rollout-1790845478"}
+  requests during rollout: ok=177 failed=0
+==> Rollout history
+3         <none>
+4         <none>
+5         rollout-demo: image rollout-1790845478
+==> Rolling back with 'kubectl rollout undo'
+deployment.apps/query-api rolled back
+deployment "query-api" successfully rolled out
+  query-api now reports: {"service":"query-api","version":"dev-1790843634"}
+  requests during rollout: ok=67 failed=0
+  (set image is used here only to show a one-off rollout/undo; real deploys go through 'make deploy')

@@ -1,0 +1,31 @@
+root = true
+
+[*]
+indent_style = space
+indent_size = 4
+end_of_line = lf
+charset = utf-8
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{yml,yaml,json,csproj,props,targets,xml}]
+indent_size = 2
+
+[Makefile]
+indent_style = tab
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.cs]
+csharp_style_namespace_declarations = file_scoped:warning
+csharp_using_directive_placement = outside_namespace:warning
+dotnet_sort_system_directives_first = true
+csharp_style_var_for_built_in_types = true:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+dotnet_style_readonly_field = true:warning
+dotnet_diagnostic.IDE0005.severity = warning   # unnecessary usings
+# Tests: underscores in test names are the convention
+dotnet_diagnostic.CA1707.severity = none
+# ConfigureAwait is irrelevant in ASP.NET Core / worker apps (no sync context)
+dotnet_diagnostic.CA2007.severity = none

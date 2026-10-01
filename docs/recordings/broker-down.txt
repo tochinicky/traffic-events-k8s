@@ -1,0 +1,21 @@
+$ POST /events (broker up) → 202
+$ kubectl -n traffic-events scale statefulset rabbitmq --replicas=0
+  t+3s  POST → 503   ingest-api ready=true
+  t+6s  POST → 503   ingest-api ready=true
+  t+9s  POST → 503   ingest-api ready=true
+  t+12s  POST → 000   ingest-api ready=false
+  t+15s  POST → 000   ingest-api ready=false
+  t+18s  POST → 000   ingest-api ready=false
+$ kubectl -n traffic-events get pods
+ingest-api-596bc8b45d-9wp97   0/1   Running     0             29m
+mongodb-0                     1/1   Running     1 (40m ago)   50m
+processor-754fcc89cc-8z96p    0/1   Running     0             28m
+query-api-fbd74b6cd-2pq2b     1/1   Running     0             15m
+$ kubectl -n traffic-events scale statefulset rabbitmq --replicas=1
+$ POST /events (broker back) → 202
+$ kubectl -n traffic-events get pods   (no restarts: liveness never checked the broker)
+ingest-api-596bc8b45d-9wp97   1/1   Running     0             30m
+mongodb-0                     1/1   Running     1 (40m ago)   50m
+processor-754fcc89cc-8z96p    1/1   Running     0             29m
+query-api-fbd74b6cd-2pq2b     1/1   Running     0             16m
+rabbitmq-0                    1/1   Running     0             46s

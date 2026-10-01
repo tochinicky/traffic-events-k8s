@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\TrafficEvents.IngestApi\TrafficEvents.IngestApi.csproj" />
+    <ProjectReference Include="..\..\src\TrafficEvents.Processor\TrafficEvents.Processor.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Testcontainers.RabbitMq" />
+    <PackageReference Include="Testcontainers.MongoDb" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\TrafficEvents.IngestApi\TrafficEvents.IngestApi.csproj" />
+    <ProjectReference Include="..\..\src\TrafficEvents.Processor\TrafficEvents.Processor.csproj" />
+    <ProjectReference Include="..\..\src\TrafficEvents.QueryApi\TrafficEvents.QueryApi.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

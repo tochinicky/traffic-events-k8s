@@ -1,0 +1,16 @@
+# Single-node kind cluster. NodePorts are mapped to localhost so the demo needs no port-forward:
+#   ingest-api  → http://localhost:30080
+#   query-api   → http://localhost:30081
+#   RabbitMQ UI → http://localhost:15672
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: traffic-events
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      - containerPort: 30080
+        hostPort: 30080
+      - containerPort: 30081
+        hostPort: 30081
+      - containerPort: 31672
+        hostPort: 15672

@@ -1,0 +1,11 @@
+**/bin/
+**/obj/
+.git/
+.github/
+.deploy/
+tests/
+k8s/
+ci/
+docs/
+scripts/
+*.md

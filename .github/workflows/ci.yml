@@ -1,0 +1,53 @@
+# Build and test on every push. Proves the pipeline logic in public; the Jenkinsfile adds the
+# image build and the deploy to a kind cluster.
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Build (analyzers on, warnings are errors)
+        run: dotnet build -c Release
+
+      - name: Unit tests
+        run: dotnet test tests/TrafficEvents.UnitTests -c Release --no-build --logger "junit;LogFilePath=${{ github.workspace }}/test-results/unit.xml"
+
+      - name: Integration tests (Testcontainers)
+        run: dotnet test tests/TrafficEvents.IntegrationTests -c Release --no-build --logger "junit;LogFilePath=${{ github.workspace }}/test-results/integration.xml"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-results/
+
+  images:
+    runs-on: ubuntu-latest
+    needs: build-test
+    strategy:
+      matrix:
+        service: [ingest-api, processor, query-api, simulator]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build ${{ matrix.service }} image (not pushed)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: ${{ matrix.service }}
+          push: false
+          tags: traffic-events/${{ matrix.service }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

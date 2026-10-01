@@ -1,0 +1,33 @@
+$ make load   # 600 events/s for 180 s from an in-cluster Job
+$ kubectl -n traffic-events get hpa processor   (sampled every 15 s)
+11:13:59  cpu: 11%/60% replicas=1
+11:14:14  cpu: 11%/60% replicas=1
+11:14:29  cpu: 45%/60% replicas=1
+11:14:44  cpu: 45%/60% replicas=1
+11:15:00  cpu: 498%/60% replicas=1
+11:15:15  cpu: 499%/60% replicas=3
+11:15:30  cpu: 482%/60% replicas=3
+11:15:45  cpu: 496%/60% replicas=3
+11:16:00  cpu: 490%/60% replicas=3
+11:16:15  cpu: 487%/60% replicas=3
+11:16:31  cpu: 491%/60% replicas=3
+11:16:46  cpu: 476%/60% replicas=3
+11:17:01  cpu: 471%/60% replicas=3
+11:17:16  cpu: 481%/60% replicas=3
+11:17:31  cpu: 482%/60% replicas=3
+11:17:46  cpu: 485%/60% replicas=3
+11:18:02  cpu: 480%/60% replicas=3
+11:18:17  cpu: 413%/60% replicas=3
+11:18:32  cpu: 18%/60% replicas=3
+11:18:47  cpu: 19%/60% replicas=3
+11:19:02  cpu: 20%/60% replicas=3
+11:19:17  cpu: 8%/60% replicas=3
+11:19:32  cpu: 9%/60% replicas=1
+11:19:48  cpu: 9%/60% replicas=1
+$ kubectl -n traffic-events logs job/load-test | tail -1
+[02:59] events by HTTP status: 202=108350
+$ kubectl -n traffic-events get events --field-selector reason=SuccessfulRescale
+46m         Normal   SuccessfulRescale   horizontalpodautoscaler/processor   New size: 3; reason: cpu resource utilization (percentage of request) above target
+13m         Normal   SuccessfulRescale   horizontalpodautoscaler/processor   New size: 2; reason: All metrics below target
+5m28s       Normal   SuccessfulRescale   horizontalpodautoscaler/processor   New size: 3; reason: cpu resource utilization (percentage of request) above target
+71s         Normal   SuccessfulRescale   horizontalpodautoscaler/processor   New size: 1; reason: All metrics below target

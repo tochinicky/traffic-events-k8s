@@ -1,0 +1,27 @@
+[1;34m==> 1. Send one event by hand[0m
+{"accepted":1}  → HTTP 202
+[1;34m==> 2. A bad one is rejected with a clear error[0m
+{"type":"https://tools.ietf.org/html/rfc9110#section-15.5.1","title":"One or more events are invalid.","status":400,"errors":{"eventId":["eventId is required and must be a non-empty UUID."],"sensorId":["sensorId is required and must look like 'S-104'."],"junctionId":["junctionId is required and must look like 'J-17'."],"timestamp":["timestamp is required (ISO 8601, UTC)."],"type":["type is required and must be one of: measurement, incident."]},"traceId":"00-1fa7af9f4de672850222ebc5fad9c671-ee2b605e5afd3b8e-00"}
+  → HTTP 400
+[1;34m==> 3. 30s of simulated traffic in-cluster (5% duplicates, 1% malformed, 1% poison)[0m
+job.batch/demo-traffic created
+job.batch/demo-traffic condition met
+[00:25] events by HTTP status: 202=1229 400=31
+[00:30] events by HTTP status: 202=1459 400=31
+[1;34m==> 4. Query: junction status, speed aggregate, recent incidents[0m
+{"junctionId":"J-17","name":"Tech Park Rd / Ring Rd","district":"Westpark","speedLimitKmh":60,"vehicleCount":15,"avgSpeedKmh":43.8,"lastMeasurementAt":"2026-10-01T09:00:00.484Z","lastIncident":{"eventId":"ed63e23c-11a6-4aed-afe3-9ab13b80d8d8","kind":"accident","lane":1,"at":"2026-10-01T08:59:41.666Z"},"updatedAt":"2026-10-01T09:00:00.728Z"}
+{"junctionId":"J-3","minutes":15,"from":"2026-10-01T08:45:08.8482119Z","to":"2026-10-01T09:00:08.8482119Z","samples":77,"avgSpeedKmh":41.9,"minSpeedKmh":10,"maxSpeedKmh":58.4,"totalVehicles":2459}
+[{"eventId":"d472ba82-9db2-430d-be8d-c71d4a25058e","junctionId":"J-16","junctionName":"Ferry Terminal Approach","kind":"roadworks","lane":1,"timestamp":"2026-10-01T09:00:01.267Z"},{"eventId":"02e4f72b-e115-4821-9253-0c9f7a328ae4","junctionId":"J-15","junctionName":"Ring Rd West / Mill Ln","kind":"roadworks","lane":1,"timestamp":"2026-10-01T08:59:58.266Z"},{"eventId":"6e513bdc-1ea8-4846-9776-e454a96ea9d0","junctionId":"J-20","junctionName":"Central Bus Station","kind":"stalled_vehicle","lane":1,"timestamp":"2026-10-01T08:59:54.266Z"},{"eventId":"c297ee18-0f12-45fa-b844-0f517d695ed8","junctionId
+[1;34m==> 5. Queues: alerts raised, poison messages dead-lettered[0m
+  File "<string>", line 1
+    import json,sys; [print(f"  {q[\"name\"]:<24} ready={q.get(\"messages_ready\",0):<6} unacked={q.get(\"messages_unacknowledged\",0):<4} consumers={q.get(\"consumers\",0)}") for q in json.load(sys.stdin)]
+                                    ^
+SyntaxError: unexpected character after line continuation character
+make: *** [demo] Error 1
+  traffic.alerts.q         ready=167    unacked=0    consumers=0
+  traffic.events.dlq       ready=11     unacked=0    consumers=0
+  traffic.events.q         ready=0      unacked=0    consumers=3
+  traffic.events.retry     ready=0      unacked=0    consumers=0
+  First message in traffic.events.dlq (peeked, left in the queue):
+    headers: {"error": "Unknown junction 'J-999'.", "error-type": "PermanentMessageException", "failed-at": "2026-10-01T08:59:37.5965556+00:00", "retry-count": 0, "x-dotnet-pub-seq-no": 1}
+    payload: {"eventId":"027cb60b-0415-4293-91fb-bd091a856dbe","sensorId":"S-101","junctionId":"J-999","type":"measurement","timestamp":"2026-10-01T08:59:37.4669603+00:00","vehicleCount":14,"avgSpeedKmh":36.3,"isI

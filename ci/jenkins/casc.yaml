@@ -1,0 +1,40 @@
+# Jenkins Configuration as Code: the whole controller is declared here, nothing clicked in the UI.
+jenkins:
+  systemMessage: "traffic-events-k8s — local CI demo"
+  numExecutors: 1
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: admin
+          password: "${JENKINS_ADMIN_PASSWORD}"
+  authorizationStrategy: loggedInUsersCanDoAnything
+
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          # The dev overlay's secrets.env, mounted read-only from the host by docker-compose.
+          - file:
+              scope: GLOBAL
+              id: traffic-events-secrets-env
+              description: k8s/overlays/dev/secrets.env
+              fileName: secrets.env
+              secretBytes: "${readFileBase64:/run/secrets/secrets.env}"
+
+jobs:
+  # Pipeline job that checks out the repo mounted at /repo and runs its Jenkinsfile.
+  - script: |
+      pipelineJob('traffic-events-k8s') {
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote { url('file:///repo') }
+                branch('*/main')
+              }
+            }
+            scriptPath('Jenkinsfile')
+          }
+        }
+      }

@@ -1,0 +1,38 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# dev = local kind cluster.
+# Must match the base: kustomize only rewrites Secret references within the same namespace.
+namespace: traffic-events
+
+resources:
+  - ../../base
+
+# Generated from a git-ignored file (`make secrets` creates it from secrets.env.example).
+# Kustomize appends a content hash to the name and rewrites every reference, so changing a
+# secret changes the pod template and triggers a rolling restart automatically.
+secretGenerator:
+  - name: traffic-events-secrets
+    envs:
+      - secrets.env
+
+# Expose the APIs (and the RabbitMQ UI) on fixed NodePorts that kind maps to localhost.
+patches:
+  - path: nodeports.yaml
+
+# One replica per API on a laptop (base says 2). Rolling updates stay zero-downtime because
+# maxSurge 1 / maxUnavailable 0 brings the new pod up before the old one goes.
+replicas:
+  - name: ingest-api
+    count: 1
+  - name: query-api
+    count: 1
+
+# Overridden per deploy by scripts/deploy.sh with the image tag that was just built.
+images:
+  - name: traffic-events/ingest-api
+    newTag: dev
+  - name: traffic-events/processor
+    newTag: dev
+  - name: traffic-events/query-api
+    newTag: dev

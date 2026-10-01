@@ -1,0 +1,151 @@
+# processor: queue consumer. No inbound traffic except probes and /metrics; scaled by the HPA below.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: processor
+  labels:
+    app.kubernetes.io/name: processor
+spec:
+  # No `replicas:` on purpose: the HPA owns the replica count. If it were set here, every
+  # `kubectl apply` would reset it and fight the autoscaler.
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: processor
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: processor
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: /metrics
+    spec:
+      # On SIGTERM the processor cancels its consumer, finishes and acks the in-flight message,
+      # then closes its channel (unstarted prefetched messages go back to the queue). The host
+      # allows 25s for that; this gives 5s headroom before SIGKILL.
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: processor
+          image: traffic-events/processor:dev
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: app-config
+          env:
+            - name: RABBITMQ_USER
+              valueFrom:
+                secretKeyRef:
+                  name: traffic-events-secrets
+                  key: RABBITMQ_USER
+            - name: RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: traffic-events-secrets
+                  key: RABBITMQ_PASSWORD
+            - name: RabbitMq__Uri
+              value: amqp://$(RABBITMQ_USER):$(RABBITMQ_PASSWORD)@$(RABBITMQ_HOST):5672/
+            - name: MONGO_USER
+              valueFrom:
+                secretKeyRef:
+                  name: traffic-events-secrets
+                  key: MONGO_USER
+            - name: MONGO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: traffic-events-secrets
+                  key: MONGO_PASSWORD
+            - name: ConnectionStrings__Mongo
+              value: mongodb://$(MONGO_USER):$(MONGO_PASSWORD)@$(MONGO_HOST):27017/?authSource=admin
+          resources:
+            requests:
+              cpu: 100m # HPA target 60% ⇒ scale out when pods average > 60m CPU
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          startupProbe:
+            httpGet:
+              path: /health/live
+              port: http
+            periodSeconds: 2
+            failureThreshold: 30
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          # Ready only when connected to RabbitMQ AND MongoDB AND actively consuming.
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 2
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+# For Prometheus scraping and `kubectl port-forward svc/processor 8080` — no client traffic.
+apiVersion: v1
+kind: Service
+metadata:
+  name: processor
+  labels:
+    app.kubernetes.io/name: processor
+spec:
+  selector:
+    app.kubernetes.io/name: processor
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+---
+# Scale on CPU between 1 and 3 pods (3, not 4: this runs on a laptop). Needs metrics-server.
+# More pods = more competing consumers on traffic.events.q; prefetch keeps the work spread out.
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: processor
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: processor
+  minReplicas: 1
+  maxReplicas: 3
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60 # percent of the CPU *request* (100m)
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 0 # react immediately to load
+    scaleDown:
+      stabilizationWindowSeconds: 60 # default is 300s; shorter so the demo shows scale-in too
