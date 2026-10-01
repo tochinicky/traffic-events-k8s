@@ -304,6 +304,13 @@ Real output from the kind cluster on an 8 GB MacBook, in [`docs/recordings`](doc
   `ok=177 failed=0` during the rollout and `ok=67 failed=0` during `kubectl rollout undo`.
 - **[Broker down](docs/recordings/broker-down.txt):** `202` → scale RabbitMQ to 0 → `503` for ~10 s → readiness
   fails and the pod leaves the Service (connection refused) → scale back → `202`, and **no pod restarted**.
+- **[Jenkins](docs/recordings/jenkins.txt):** build #2 green end to end in about 2.5 minutes: build, 48 unit +
+  21 integration (Testcontainers from inside Jenkins) + 1 smoke test = 70 passing, images `06b9941-b2` loaded into
+  kind, deployed and rolled out. Build #1 died when Docker Desktop restarted under memory pressure, which is why
+  the compose file has `restart: unless-stopped` and the build runs with a single MSBuild node.
+- **Docker Desktop restart:** the cluster came back by itself with the same pods and data, because the PVCs
+  persisted. One catch: Docker switched the kubectl context to its own built-in cluster, so the scripts now always
+  pass `--context kind-traffic-events`.
 - **[Demo](docs/recordings/demo.txt):** 1,459 accepted and 31 rejected; duplicates skipped; the DLQ holds
   poison events with `error: Unknown junction 'J-999'`.
 
@@ -377,6 +384,18 @@ ci/jenkins/  Jenkins image, configuration-as-code, docker-compose
 scripts/     what the Makefile runs
 docs/demo.md  a 5-minute live demo script
 ```
+
+## Publishing
+
+The repo is local only. To publish (this also triggers the GitHub Actions run), create an empty repository named
+`traffic-events-k8s` on GitHub, then:
+
+```bash
+git remote add origin git@github.com:<your-user>/traffic-events-k8s.git
+git push -u origin main
+```
+
+Before pushing, check that `git ls-files | grep -i secret` lists only `secrets.env.example` and `make-secrets.sh`.
 
 ## Licence
 

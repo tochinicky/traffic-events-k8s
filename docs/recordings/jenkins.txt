@@ -1,0 +1,12 @@
+$ Jenkins build #2 (traffic-events-k8s)
+result: SUCCESS
+  Declarative: Checkout SCM  SUCCESS     0s
+  Checkout                   SUCCESS     1s
+  Restore & Build            SUCCESS    34s
+  Unit tests                 SUCCESS     4s
+  Integration tests          SUCCESS    42s
+  Build images               SUCCESS     7s
+  Load images into kind      SUCCESS    38s
+  Deploy                     SUCCESS    12s
+  Smoke test                 SUCCESS    13s
+  Declarative: Post Actions  SUCCESS     3s
