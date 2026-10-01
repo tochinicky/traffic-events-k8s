@@ -385,18 +385,6 @@ scripts/     what the Makefile runs
 docs/demo.md  a 5-minute live demo script
 ```
 
-## Publishing
-
-The repo is local only. To publish (this also triggers the GitHub Actions run), create an empty repository named
-`traffic-events-k8s` on GitHub, then:
-
-```bash
-git remote add origin git@github.com:<your-user>/traffic-events-k8s.git
-git push -u origin main
-```
-
-Before pushing, check that `git ls-files | grep -i secret` lists only `secrets.env.example` and `make-secrets.sh`.
-
 ## Licence
 
 MIT.
